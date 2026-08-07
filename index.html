@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flight Finder — Mockup</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23ffffff' stroke='%23E4002B' stroke-width='2'/%3E%3Cpath d='M14 40 Q32 12 50 40' fill='none' stroke='%23E4002B' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='40' r='4' fill='%23E4002B'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F5F6F7;
+    --panel: #FFFFFF;
+    --panel-alt: #FDE8EB;
+    --line: #E2E5E8;
+    --text: #1B1F23;
+    --text-muted: #6B7280;
+    --red: #E4002B;
+    --red-dark: #B4001F;
+    --red-tint: #FDE8EB;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Manrope',sans-serif;
+    min-height:100vh;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  header.app{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 32px;
+    background:var(--panel);
+    border-bottom:2px solid var(--red);
+  }
+  header.app .brand{display:flex;align-items:center;gap:10px;}
+  header.app .brand .mark{width:30px;height:30px;flex-shrink:0;}
+  header.app .brand h1{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:700;
+    letter-spacing:2px;
+    font-size:19px;
+    margin:0;
+    color:var(--text);
+  }
+  header.app .brand h1 span{color:var(--red);}
+
+  .origin-box{
+    position:relative;
+    display:flex;align-items:center;gap:8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;color:var(--text-muted);
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:6px 8px 6px 14px;
+    border-radius:999px;
+  }
+  .origin-code{
+    border:none;background:var(--red-tint);
+    color:var(--red-dark);font-weight:700;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;letter-spacing:1px;
+    text-align:center;text-transform:uppercase;
+    border-radius:6px;padding:5px 10px;
+    cursor:pointer;
+  }
+  .origin-code:hover{background:#fbd4da;}
+
+  .origin-popover{
+    position:absolute;top:calc(100% + 8px);right:0;
+    width:230px;background:#fff;
+    border:1px solid var(--line);border-radius:10px;
+    box-shadow:0 10px 28px rgba(0,0,0,0.14);
+    padding:10px;display:none;z-index:60;
+  }
+  .origin-popover.open{display:block;}
+  .origin-popover input{
+    width:100%;box-sizing:border-box;
+    border:1px solid var(--line);border-radius:6px;
+    padding:8px 10px;font-family:'IBM Plex Mono',monospace;
+    font-size:13px;margin-bottom:8px;color:var(--text);
+    text-transform:none;letter-spacing:normal;
+  }
+  .origin-popover input:focus{outline:2px solid var(--red);border-color:var(--red);}
+  .origin-options{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
+  .origin-option{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:7px 8px;border-radius:6px;cursor:pointer;
+  }
+  .origin-option:hover{background:var(--red-tint);}
+  .origin-option .code{font-weight:700;color:var(--red-dark);font-size:13px;}
+  .origin-option .city{color:var(--text-muted);font-size:12px;font-family:'Manrope',sans-serif;}
+  .origin-empty{font-size:12px;color:var(--text-muted);padding:8px;font-family:'Manrope',sans-serif;}
+
+  .layout{
+    display:grid;
+    grid-template-columns:320px 1fr;
+    gap:0;
+    min-height:calc(100vh - 73px);
+  }
+
+  /* ---------- FILTER RAIL ---------- */
+  aside.filters{
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    padding:24px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+  }
+  .filter-group label.title{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    color:var(--text-muted);
+    margin-bottom:10px;
+    font-weight:700;
+  }
+  .date-row{display:flex;gap:8px;}
+  .date-row input[type="date"]{min-width:0;flex:1;}
+  input[type="date"]{
+    background:var(--bg);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:6px;
+    padding:8px 6px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    width:100%;
+    box-sizing:border-box;
+  }
+  .toggle-row{display:flex;flex-direction:column;gap:6px;}
+  .toggle{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:9px 12px;
+    font-size:13px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+  }
+  .toggle:hover{border-color:#f0aab6;}
+  .toggle.active{border-color:var(--red);background:var(--red-tint);color:var(--red-dark);font-weight:600;}
+  .toggle .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--line);
+  }
+  .toggle.active .dot{background:var(--red);}
+
+  .range-labels{
+    display:flex;justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;color:var(--red-dark);margin-bottom:6px;
+  }
+  input[type="range"]{
+    width:100%;
+    accent-color:var(--red);
+  }
+  select{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-radius:6px;
+    padding:8px;
+    font-size:13px;
+  }
+  .helper{font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.4;}
+
+  /* ---------- MAIN AREA ---------- */
+  main{padding:24px 32px;}
+  .main-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:18px;
+  }
+  .main-head h2{margin:0;font-size:15px;color:var(--text-muted);font-weight:600;}
+  .main-head h2 b{color:var(--text);}
+  .count{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-muted);}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+    gap:16px;
+  }
+
+  .card-scene{perspective:1400px;height:250px;}
+  .card-scene.hidden{display:none;}
+  .card{
+    position:relative;
+    width:100%;height:100%;
+    transition:transform .55s cubic-bezier(.4,.2,.2,1);
+    transform-style:preserve-3d;
+    cursor:pointer;
+  }
+  .card-scene.flipped .card{transform:rotateY(180deg);}
+  .face{
+    position:absolute;inset:0;
+    -webkit-backface-visibility:hidden;backface-visibility:hidden;
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    background:var(--panel);
+    padding:16px;
+    display:flex;flex-direction:column;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04);
+  }
+  .face.back{transform:rotateY(180deg);}
+
+  .face.front .dest-name{font-size:19px;font-weight:800;margin:0;}
+  .face.front .dest-country{font-size:12px;color:var(--text-muted);margin:2px 0 12px;}
+  .stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;}
+  .stat-value{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--red-dark);font-weight:600;}
+  .badge-row{display:flex;gap:6px;margin-top:auto;flex-wrap:wrap;}
+  .badge{
+    font-size:10px;font-family:'IBM Plex Mono',monospace;
+    padding:3px 8px;border-radius:999px;
+    border:1px solid var(--line);color:var(--text-muted);
+  }
+  .badge.nonstop{border-color:#f0aab6;color:var(--red-dark);background:var(--red-tint);}
+  .badge.clear{border-color:var(--line);color:var(--text-muted);}
+
+  .face.back .back-head{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    margin-bottom:12px;gap:8px;
+  }
+  .back-title{display:flex;flex-direction:column;min-height:32px;}
+  .back-title h4{margin:0;font-size:14px;line-height:1.3;}
+  .back-title .week-sub{font-size:10px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;margin-top:1px;}
+  .route-code{
+    font-size:10px;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;
+    text-align:right;line-height:1.4;flex-shrink:0;white-space:nowrap;
+  }
+
+  .week-row{display:flex;justify-content:space-between;margin-bottom:auto;gap:2px;}
+  .flap{
+    display:flex;flex-direction:column;align-items:center;gap:5px;
+    font-family:'IBM Plex Mono',monospace;
+    flex:1;
+  }
+  .flap .day{font-size:10px;color:var(--text-muted);font-weight:600;}
+  .flap .circle{
+    width:20px;height:20px;border-radius:50%;
+    border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .flap.on .circle{background:var(--red);border-color:var(--red);}
+  .flap.on .day{color:var(--red-dark);}
+  .flap .codes{display:flex;flex-direction:column;gap:2px;align-items:center;}
+  .flap .code{
+    font-size:8.5px;color:var(--red-dark);
+    background:var(--red-tint);
+    padding:1px 4px;border-radius:3px;
+    line-height:1.4;font-weight:600;
+  }
+
+  /* Custom tooltips — native title= is unreliable inside 3D-transformed
+     flip cards in some browsers, so we drive this with CSS instead. */
+  [data-tooltip]{position:relative;}
+  [data-tooltip]:hover::after{
+    content:attr(data-tooltip);
+    position:absolute;bottom:130%;left:50%;
+    transform:translateX(-50%);
+    background:var(--text);color:#fff;
+    font-size:10px;padding:5px 9px;border-radius:5px;
+    white-space:nowrap;z-index:100;
+    font-family:'IBM Plex Mono',monospace;font-weight:600;
+    pointer-events:none;
+    box-shadow:0 4px 10px rgba(0,0,0,0.2);
+  }
+  [data-tooltip]:hover::before{
+    content:"";position:absolute;bottom:120%;left:50%;
+    transform:translateX(-50%);
+    border:5px solid transparent;border-top-color:var(--text);
+    z-index:100;
+  }
+  .plan-btn{
+    margin-top:12px;
+    background:var(--red);
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    padding:9px 0;
+    font-weight:700;
+    font-size:12px;
+    letter-spacing:.5px;
+    cursor:pointer;
+    text-transform:uppercase;
+  }
+  .plan-btn:hover{background:var(--red-dark);}
+
+  /* ---------- TRIP PLANNER OVERLAY ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,20,20,0.35);
+    display:none;align-items:stretch;justify-content:flex-end;z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .planner{
+    width:min(560px,92vw);
+    background:var(--panel);
+    border-left:1px solid var(--line);
+    padding:28px;
+    display:flex;flex-direction:column;
+    animation:slidein .25s ease-out;
+  }
+  @keyframes slidein{from{transform:translateX(30px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+  .planner-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+  .planner-head h3{margin:0;font-size:20px;}
+  .planner-head button{background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer;}
+  .planner-sub{color:var(--text-muted);font-size:13px;margin-bottom:20px;}
+  .planner-date{
+    display:flex;gap:10px;align-items:center;margin-bottom:20px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  table.flights{width:100%;border-collapse:collapse;font-size:13px;}
+  table.flights th{
+    text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;
+    color:var(--text-muted);padding-bottom:8px;border-bottom:1px solid var(--line);
+  }
+  table.flights td{padding:10px 4px;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono',monospace;}
+  table.flights td.airline-cell{font-family:'Manrope',sans-serif;font-weight:600;}
+  .note{
+    margin-top:20px;font-size:12px;color:var(--text-muted);
+    background:var(--bg);border:1px solid var(--line);
+    border-radius:8px;padding:12px 14px;line-height:1.5;
+  }
+
+  .status-bar{
+    display:flex;align-items:center;justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;
+    color:var(--text-muted);
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;padding:10px 14px;margin-bottom:16px;
+    gap:16px;
+  }
+  .status-bar.error{color:var(--red-dark);background:var(--red-tint);border-color:#f0aab6;}
+  .status-bar button{
+    background:none;border:1px solid var(--line);color:var(--text);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    padding:5px 10px;border-radius:6px;cursor:pointer;
+  }
+  .status-bar button:hover{border-color:var(--red);color:var(--red-dark);}
+
+  .mobile-filters-toggle{
+    display:none;
+    width:100%;
+    align-items:center;justify-content:center;gap:6px;
+    background:var(--panel);
+    border:none;border-bottom:1px solid var(--line);
+    padding:14px;
+    font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;
+    color:var(--text);cursor:pointer;
+  }
+  .mobile-filters-toggle svg{transition:transform .2s ease;}
+  .mobile-filters-toggle.open svg{transform:rotate(180deg);}
+
+  /* ============================================================
+     MOBILE / iOS LAYOUT
+     Breakpoint chosen to cover iPhone and small-tablet widths in
+     portrait. Below this, filters collapse into a toggled panel,
+     cards go single-column, inputs are sized to avoid iOS Safari's
+     auto-zoom-on-focus, and the trip planner becomes a bottom sheet
+     instead of a right-hand drawer.
+     ============================================================ */
+  @media (max-width: 860px){
+    header.app{
+      padding:14px 16px;
+      padding-top:calc(14px + env(safe-area-inset-top));
+    }
+    header.app .brand h1{font-size:15px;letter-spacing:1px;}
+    header.app .brand .mark{width:24px;height:24px;}
+    .origin-box{font-size:12px;padding:5px 6px 5px 10px;}
+
+    .mobile-filters-toggle{display:flex;}
+
+    .layout{grid-template-columns:1fr;}
+
+    aside.filters{
+      border-right:none;border-bottom:1px solid var(--line);
+      padding:16px;
+      display:none;
+      gap:18px;
+    }
+    aside.filters.mobile-open{display:flex;}
+
+    /* iOS Safari zooms in on any input/select under 16px font-size when
+       focused — keeping these at 16px avoids that jarring zoom. */
+    input[type="date"], select, .origin-popover input{
+      font-size:16px;
+    }
+
+    main{padding:16px;}
+    .main-head{flex-direction:column;align-items:flex-start;gap:4px;}
+
+    .grid{grid-template-columns:1fr;}
+    .card-scene{height:auto;min-height:230px;}
+
+    .status-bar{flex-direction:column;align-items:stretch;gap:10px;}
+    .progress-track{width:100%;}
+
+    /* Trip planner becomes a bottom sheet on mobile, matching native
+       iOS modal presentation, instead of a right-hand drawer. */
+    .overlay{align-items:flex-end;}
+    .planner{
+      width:100%;
+      max-height:88vh;
+      border-left:none;
+      border-top:1px solid var(--line);
+      border-radius:18px 18px 0 0;
+      padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+      animation:sheetup .25s ease-out;
+      overflow-y:auto;
+    }
+    @keyframes sheetup{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+    table.flights{font-size:12px;}
+    table.flights th, table.flights td{padding:8px 3px;}
+
+    .search-btn{
+      position:sticky;bottom:0;
+      padding:14px 0;font-size:14px;
+    }
+  }
+  #statusText{flex:1;}
+
+  .progress-track{
+    position:relative;width:160px;height:6px;flex-shrink:0;
+    background:var(--line);border-radius:999px;overflow:visible;
+  }
+  .progress-fill{
+    height:100%;width:0%;background:var(--red);border-radius:999px;
+    transition:width .3s ease;
+  }
+  .progress-plane{
+    position:absolute;top:50%;left:0%;
+    transform:translate(-50%,-50%);
+    transition:left .3s ease;
+    display:flex;align-items:center;justify-content:center;
+    filter:drop-shadow(0 1px 1px rgba(0,0,0,0.35));
+  }
+
+  .search-btn{
+    background:var(--red);color:#fff;border:none;
+    border-radius:8px;padding:12px 0;
+    font-family:'IBM Plex Mono',monospace;font-weight:700;
+    font-size:13px;letter-spacing:.5px;text-transform:uppercase;
+    cursor:pointer;margin-top:4px;
+  }
+  .search-btn:hover{background:var(--red-dark);}
+  .search-btn:disabled{background:var(--line);color:var(--text-muted);cursor:not-allowed;}
+
+  .empty-state{
+    grid-column:1 / -1;
+    text-align:center;padding:60px 20px;color:var(--text-muted);
+    font-size:14px;
+  }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="30" fill="#fff" stroke="#E4002B" stroke-width="2"/>
+      <path d="M14 40 Q32 12 50 40" fill="none" stroke="#E4002B" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="50" cy="40" r="4" fill="#E4002B"/>
+    </svg>
+    <h1>FLIGHT <span>FINDER</span></h1>
+  </div>
+  <div class="origin-box" id="originBox">
+    Flying from
+    <button class="origin-code" id="originCode" type="button">SYD</button>
+    <div class="origin-popover" id="originPopover">
+      <input type="text" id="originSearch" placeholder="City or airport code…" autocomplete="off">
+      <div class="origin-options" id="originOptions"></div>
+    </div>
+  </div>
+</header>
+
+<button id="mobileFiltersToggle" class="mobile-filters-toggle" type="button">
+  <span>Filters</span>
+  <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<div class="layout">
+  <aside class="filters">
+    <div class="filter-group">
+      <label class="title">Travel window</label>
+      <div class="date-row">
+        <input type="date" id="windowStart">
+        <input type="date" id="windowEnd">
+      </div>
+      <p class="helper">Used to estimate typical climate for these dates (based on last year's weather). Required before you can search.</p>
+    </div>
+
+    <div class="filter-group">
+      <label class="title">Stops</label>
+      <div class="toggle-row">
+        <div class="toggle active"><span>Nonstop only</span><span class="dot"></span></div>
+        <div class="toggle" style="opacity:0.45;cursor:not-allowed;" title="Not available yet — see note below"><span>1 stop or fewer (not yet supported)</span><span class="dot"></span></div>
+      </div>
+      <p class="helper">This build only reads direct flights off the departure board — connections are a later phase.</p>
+    </div>
+
+    <div class="filter-group">
+      <label class="title">Temperature (°C)</label>
+      <div class="range-labels"><span id="tempMinLabel">10°</span><span id="tempMaxLabel">30°</span></div>
+      <input type="range" id="tempMin" min="-10" max="40" value="10">
+      <input type="range" id="tempMax" min="-10" max="40" value="30">
+    </div>
+
+    <div class="filter-group">
+      <label class="title">Humidity</label>
+      <select id="humiditySelect">
+        <option value="low">Low</option>
+        <option value="medium" selected>Medium</option>
+        <option value="high">High</option>
+      </select>
+      <p class="helper">Low shows low only. Medium shows low + medium. High shows all humidity levels.</p>
+    </div>
+
+    <div class="filter-group">
+      <label class="title">Max flight time</label>
+      <div class="range-labels"><span id="durationLabel">Up to 10 hrs</span></div>
+      <input type="range" id="durationMax" min="1" max="20" value="10">
+    </div>
+
+    <div class="filter-group">
+      <div class="toggle active"><span>Smartraveller clear only</span><span class="dot"></span></div>
+      <p class="helper">Excludes destinations currently rated "reconsider your need to travel" or worse.</p>
+    </div>
+
+    <div class="filter-group">
+      <label class="title">Airline access</label>
+      <div class="toggle-row">
+        <div class="toggle active" id="allAirlinesToggle"><span>All standby airlines</span><span class="dot"></span></div>
+        <div class="toggle" id="qantasOnlyToggle"><span>Qantas only</span><span class="dot"></span></div>
+      </div>
+      <p class="helper">"All standby airlines" covers the 28 carriers on the QF codeshare/interline list. "Qantas only" shows routes with a QF flight number.</p>
+    </div>
+
+    <div class="filter-group">
+      <label class="title">Scope</label>
+      <div class="toggle-row">
+        <div class="toggle" id="domesticToggle"><span>Include AU domestic routes</span><span class="dot"></span></div>
+      </div>
+      <p class="helper">Off by default — this is built for international standby travel, but QantasLink domestic hops are in the same data if you want them.</p>
+    </div>
+
+    <button id="searchBtn" class="search-btn" type="button">Search flights</button>
+  </aside>
+
+  <main>
+    <div class="main-head">
+      <h2>Matching <b id="windowLabel">your dates</b> · click a card to see the week</h2>
+      <span class="count" id="resultCount">— destinations</span>
+    </div>
+    <div id="statusBar" class="status-bar">
+      <span id="statusText"></span>
+      <div id="progressTrack" class="progress-track" style="display:none;">
+        <div id="progressFill" class="progress-fill"></div>
+        <span id="progressPlane" class="progress-plane">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path d="M2 12l19-9-6 9 6 9-19-9z" fill="#ffffff" stroke="#1B1F23" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="planner">
+    <div class="planner-head">
+      <h3 id="plannerCity">Tokyo</h3>
+      <button onclick="closePlanner()">✕</button>
+    </div>
+    <div class="planner-sub">SYD → HND · nonstop</div>
+    <div class="planner-date">
+      <span>Departing</span>
+      <input type="date" id="plannerDateInput" value="2026-08-14">
+    </div>
+    <table class="flights">
+      <thead>
+        <tr><th>Airline</th><th>Flight</th><th>Aircraft</th><th>Dep</th><th>Est. Arr</th><th>Est. Time</th></tr>
+      </thead>
+      <tbody id="plannerRows"></tbody>
+    </table>
+    <div class="note">Airline, flight number, aircraft and departure time are live from AeroDataBox's schedule for this week. Arrival time and flight duration are distance-based estimates (great-circle distance ÷ typical cruise speed, plus a taxi/climb buffer) — AeroDataBox's free-tier schedule endpoint doesn't return arrival times, so this is the honest substitute rather than invented precision.</div>
+  </div>
+</div>
+
+<script src="airports-data.js"></script>
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+// This key lives in plain text because this is a static site with
+// no server. Fine for a free-tier key on a private family tool —
+// just don't reuse it anywhere sensitive.
+const RAPIDAPI_KEY = "11f5e30381mshad4e12af7ee7182p1cc55fjsn85fc1b8fafa9";
+const RAPIDAPI_HOST = "aerodatabox.p.rapidapi.com";
+
+// Every airline coded in the Qantas codeshare/interline PDF, plus QF itself.
+const STANDBY_AIRLINES = new Set([
+  "QF","SB","AF","NZ","PX","TN","NF","TL","AS","AA","PG","BA","CX","CI",
+  "MU","CZ","LY","EK","FJ","AY","GA","QX","6E","JL","KL","LA","IE","UL","WS"
+]);
+
+const WEEKDAY_ORDER = [1,2,3,4,5,6,0]; // Mon..Sun, mapped to JS getDay() values
+const WEEKDAY_LABELS = ["Mo","Tu","We","Th","Fr","Sa","Su"];
+
+const countryNamer = (() => {
+  try { return new Intl.DisplayNames(["en"], { type: "region" }); }
+  catch { return null; }
+})();
+function countryName(code){
+  if (!code) return "";
+  return countryNamer ? (countryNamer.of(code) || code) : code;
+}
+
+/* ============================================================
+   ORIGIN SELECTOR
+   ============================================================ */
+const originAirports = (typeof WORLD_AIRPORTS !== "undefined" && WORLD_AIRPORTS.length)
+  ? WORLD_AIRPORTS
+  : [{code:"SYD", city:"Sydney", country:"AU", lat:-33.9461, lon:151.1772}];
+if (typeof WORLD_AIRPORTS === "undefined") {
+  console.warn("[FlightFinder] airports-data.js didn't load — falling back to SYD only. Make sure airports-data.js is saved in the exact same folder as this HTML file.");
+}
+function originCoords(code){
+  const a = originAirports.find(o => o.code === code);
+  return a ? { lat: a.lat, lon: a.lon } : null;
+}
+
+const originBox = document.getElementById("originBox");
+const originCodeBtn = document.getElementById("originCode");
+const originPopover = document.getElementById("originPopover");
+const originSearch = document.getElementById("originSearch");
+const originOptions = document.getElementById("originOptions");
+
+function renderOriginOptions(query){
+  const q = query.trim().toLowerCase();
+  const matches = q
+    ? originAirports.filter(a =>
+        a.code.toLowerCase().includes(q) ||
+        a.city.toLowerCase().includes(q) ||
+        countryName(a.country).toLowerCase().includes(q)
+      ).slice(0, 40) // cap rendered results for performance with 3000+ airports
+    : originAirports.filter(a => a.code === "SYD");
+  originOptions.innerHTML = matches.length
+    ? matches.map(a => `<div class="origin-option" data-code="${a.code}"><span class="code">${a.code}</span><span class="city">${a.city}, ${countryName(a.country)}</span></div>`).join("")
+    : `<div class="origin-empty">No airport matches "${query}"</div>`;
+}
+
+originCodeBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  originPopover.classList.add("open");
+  originSearch.value = "";
+  renderOriginOptions("");
+  originSearch.focus();
+});
+originSearch.addEventListener("input", () => renderOriginOptions(originSearch.value));
+originOptions.addEventListener("click", (e) => {
+  const opt = e.target.closest(".origin-option");
+  if (!opt) return;
+  originCodeBtn.textContent = opt.dataset.code;
+  originPopover.classList.remove("open");
+  grid.innerHTML = `<div class="empty-state">Origin changed to ${opt.dataset.code} — hit Search to load flights.</div>`;
+  resultCount.textContent = "— destinations";
+  setStatus("");
+});
+document.addEventListener("click", (e) => {
+  if (!originBox.contains(e.target)) originPopover.classList.remove("open");
+});
+
+/* ============================================================
+   STATE + DOM HANDLES
+   ============================================================ */
+let destinations = []; // populated by loadEverything()
+const grid = document.getElementById("grid");
+const statusBar = document.getElementById("statusBar");
+const resultCount = document.getElementById("resultCount");
+
+function setStatus(html, isError=false){
+  document.getElementById("statusText").innerHTML = html;
+  statusBar.classList.toggle("error", isError);
+}
+function setProgress(current, total){
+  const track = document.getElementById("progressTrack");
+  const fill = document.getElementById("progressFill");
+  const plane = document.getElementById("progressPlane");
+  if (total == null) { track.style.display = "none"; return; }
+  track.style.display = "block";
+  const pct = Math.min(100, Math.round((current / total) * 100));
+  fill.style.width = pct + "%";
+  plane.style.left = pct + "%";
+}
+
+/* ============================================================
+   STEP A — discover the real route network for this origin.
+   This is the actual destination list (city, country, coordinates,
+   operating airlines, average daily frequency) — no shortlist,
+   no guessing. Cached 14 days per origin — route networks rarely
+   change day to day, so a longer cache here costs almost nothing
+   in accuracy while protecting the free AeroDataBox quota.
+   ============================================================ */
+async function fetchRoutes(originCode){
+  const cacheKey = `ff_routes_${originCode}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    const ageHours = (Date.now() - parsed.fetchedAt) / 3600000;
+    if (ageHours < 24 * 14) return parsed.data;
+  }
+
+  const today = new Date().toISOString().slice(0,10);
+  const url = `https://${RAPIDAPI_HOST}/airports/iata/${originCode}/stats/routes/daily/${today}`;
+  const res = await fetch(url, {
+    headers: { "X-RapidAPI-Key": RAPIDAPI_KEY, "X-RapidAPI-Host": RAPIDAPI_HOST }
+  });
+  if (!res.ok) throw new Error(`AeroDataBox routes lookup returned ${res.status}`);
+  const data = await res.json();
+  const routes = data.routes || [];
+
+  localStorage.setItem(cacheKey, JSON.stringify({ fetchedAt: Date.now(), data: routes }));
+  return routes;
+}
+
+// Rough brand colours for the airline codes shown on the weekly pattern.
+// Not exhaustive — anything missing falls back to the neutral red-tint style.
+const AIRLINE_BRANDS = {
+  QF: { bg: "var(--red-tint)", text: "var(--red-dark)" },      // Qantas
+  NZ: { bg: "#000000", text: "#ffffff" },                       // Air New Zealand
+  JQ: { bg: "#FF6600", text: "#ffffff" },                       // Jetstar
+  VA: { bg: "#7B0032", text: "#ffffff" },                       // Virgin Australia
+  CX: { bg: "#006564", text: "#ffffff" },                       // Cathay Pacific
+  SQ: { bg: "#043784", text: "#F5C518" },                       // Singapore Airlines
+  JL: { bg: "#C8102E", text: "#ffffff" },                       // Japan Airlines
+  NH: { bg: "#12298C", text: "#ffffff" },                       // ANA
+  BA: { bg: "#075AAA", text: "#ffffff" },                       // British Airways
+  EK: { bg: "#D71921", text: "#ffffff" },                       // Emirates
+  CI: { bg: "#B01F24", text: "#ffffff" },                       // China Airlines
+  AA: { bg: "#0078D2", text: "#ffffff" },                       // American Airlines
+  AS: { bg: "#00385F", text: "#ffffff" },                       // Alaska Airlines
+  SB: { bg: "#00A19A", text: "#ffffff" },                       // Aircalin
+  AF: { bg: "#002157", text: "#ffffff" },                       // Air France
+  KL: { bg: "#00A1DE", text: "#00205B" },                       // KLM
+  LA: { bg: "#1A1A1A", text: "#ffffff" },                       // LATAM
+  FJ: { bg: "#0072CE", text: "#F9A01B" },                       // Fiji Airways
+  GA: { bg: "#00563F", text: "#ffffff" },                       // Garuda Indonesia
+  AY: { bg: "#0F1689", text: "#ffffff" },                       // Finnair
+  UL: { bg: "#6A1B3A", text: "#F2A900" },                       // SriLankan Airlines
+  WS: { bg: "#00563F", text: "#ffffff" },                       // WestJet
+  PX: { bg: "#E4032E", text: "#ffffff" },                       // Air Niugini
+  TN: { bg: "#007A87", text: "#ffffff" },                       // Air Tahiti Nui
+  MU: { bg: "#004B87", text: "#ffffff" },                       // China Eastern
+  CZ: { bg: "#003DA5", text: "#ffffff" },                       // China Southern
+  LY: { bg: "#003399", text: "#ffffff" },                       // El Al
+  QX: { bg: "#00385F", text: "#ffffff" },                       // Horizon Air
+};
+function airlineBrand(code){
+  return AIRLINE_BRANDS[code] || { bg: "var(--red-tint)", text: "var(--red-dark)" };
+}
+
+function normalizeName(s){
+  return (s || "").toLowerCase().replace(/[^a-z]/g, "");
+}
+
+// Straight-line distance between two coordinates, in kilometres.
+function haversineKm(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
+
+// The schedule endpoint only gives Sydney's own departure time, never the
+// arrival time at the other end, so real duration isn't available from it.
+// This estimates flight time from great-circle distance at a typical
+// commercial cruise speed, plus a fixed allowance for taxi/climb/descent.
+function estimateDurationMinutes(distanceKm){
+  const cruiseSpeedKmh = 850;
+  const groundAndClimbBufferMin = 40;
+  return Math.round((distanceKm / cruiseSpeedKmh) * 60 + groundAndClimbBufferMin);
+}
+function formatDuration(mins){
+  return `${Math.floor(mins/60)}h ${mins%60}m`;
+}
+function buildCandidatesFromRoutes(routes, includeDomestic){
+  const candidates = {};
+  const byName = {};
+  routes.forEach(r => {
+    const dest = r.destination;
+    if (!dest?.iata || !dest?.location) return; // skip entries with no usable IATA/coords (e.g. tiny strips)
+    if (!includeDomestic && dest.countryCode === "AU") return;
+
+    const standbyOperators = (r.operators || []).filter(op => op.iata && STANDBY_AIRLINES.has(op.iata));
+    if (!standbyOperators.length) return; // no airline we can actually standby on flies this route
+
+    const candidate = {
+      code: dest.iata,
+      city: dest.municipalityName || dest.shortName || dest.name,
+      country: countryName(dest.countryCode) || dest.countryCode,
+      countryCode: dest.countryCode,
+      lat: dest.location.lat,
+      lon: dest.location.lon,
+      avgDailyFlights: r.averageDailyFlights,
+      standbyOperatorCodes: new Set(standbyOperators.map(op => op.iata)),
+      week: WEEKDAY_LABELS.map(d => ({ day: d, on: false, flights: [] })),
+      durations: [],
+    };
+    candidates[dest.iata] = candidate;
+    // AeroDataBox's schedule endpoint sometimes omits IATA codes on the
+    // destination airport object, so we also index by normalized name as
+    // a fallback match.
+    [dest.name, dest.shortName, dest.municipalityName].forEach(n => {
+      const key = normalizeName(n);
+      if (key) byName[key] = candidate;
+    });
+  });
+  return { candidates, byName };
+}
+
+/* ============================================================
+   STEP B — pull this week's actual departures to fill in the
+   per-weekday pattern and flight-level detail (flight number,
+   aircraft, times) for the destinations Step A discovered.
+   ============================================================ */
+function sleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+
+async function fetchWeekSchedule(originCode, onProgress){
+  const cacheKey = `ff_schedule_${originCode}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    const ageHours = (Date.now() - parsed.fetchedAt) / 3600000;
+    // 3 days, not longer — this data is always "the next 7 days from
+    // whenever it was fetched," so letting it get too stale means it
+    // increasingly describes a week that's already partly in the past.
+    if (ageHours < 24 * 3) return parsed.data;
+  }
+
+  // The FIDS "by time range" endpoint caps each request at 12 hours,
+  // so a full 7-day week needs 14 sequential calls (two 12-hour halves
+  // per day). The Basic plan is also rate-limited to 1 request/second,
+  // so we space these out rather than firing them in parallel.
+  const windows = [];
+  const today = new Date();
+  for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + dayOffset);
+    const dateStr = d.toISOString().slice(0,10);
+    windows.push({ from: `${dateStr}T00:00`, to: `${dateStr}T11:59` });
+    windows.push({ from: `${dateStr}T12:00`, to: `${dateStr}T23:59` });
+  }
+
+  const allFlights = [];
+  for (let i = 0; i < windows.length; i++) {
+    const { from, to } = windows[i];
+    if (onProgress) onProgress(i + 1, windows.length);
+
+    const url = `https://${RAPIDAPI_HOST}/flights/airports/iata/${originCode}/${from}/${to}` +
+                `?direction=Departure&withLeg=false&withCancelled=false&withCodeshared=true&withCargo=false&withPrivate=false&withLocation=true`;
+    const res = await fetch(url, {
+      headers: { "X-RapidAPI-Key": RAPIDAPI_KEY, "X-RapidAPI-Host": RAPIDAPI_HOST }
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`Schedule window ${from}–${to} returned ${res.status}${body ? `: ${body}` : ""}`);
+    }
+    const data = await res.json();
+    const flights = Array.isArray(data) ? data : (data.departures || []);
+    allFlights.push(...flights);
+
+    if (i < windows.length - 1) await sleep(1100); // respect 1 req/sec limit
+  }
+
+  localStorage.setItem(cacheKey, JSON.stringify({ fetchedAt: Date.now(), data: allFlights }));
+  console.log(`[FlightFinder] Total flights fetched across all windows: ${allFlights.length}`);
+  if (allFlights.length) {
+    console.log("[FlightFinder] Sample flight object (first one) — copy everything between the lines:");
+    console.log("-----START-----");
+    console.log(JSON.stringify(allFlights[0], null, 2));
+    console.log("-----END-----");
+  } else {
+    console.log("[FlightFinder] No flights came back at all — the response shape might differ from what's expected. Check the Network tab for the raw response body.");
+  }
+  return allFlights;
+}
+
+function fillWeekFromFlights(candidatesResult, flights, originLat, originLon){
+  const { candidates, byName } = candidatesResult;
+  let matchedCandidate = 0, noDestInfo = 0, notACandidate = 0, notStandbyAirline = 0, noDepTime = 0, matchedByName = 0;
+
+  flights.forEach(f => {
+    const airportInfo = f.movement?.airport;
+    if (!airportInfo) { noDestInfo++; return; }
+
+    let d = airportInfo.iata ? candidates[airportInfo.iata] : null;
+    if (!d) {
+      d = byName[normalizeName(airportInfo.name)] || byName[normalizeName(airportInfo.shortName)];
+      if (d) matchedByName++;
+    }
+    if (!d) { notACandidate++; return; }
+
+    const airlineCode = f.airline?.iata || (f.number || "").replace(/\s/g,"").slice(0,2);
+    if (!d.standbyOperatorCodes.has(airlineCode)) { notStandbyAirline++; return; }
+
+    const depLocal = f.movement?.scheduledTime?.local;
+    if (!depLocal) { noDepTime++; return; }
+
+    matchedCandidate++;
+    const jsDay = new Date(depLocal.replace(" ", "T")).getDay();
+    const weekIdx = WEEKDAY_ORDER.indexOf(jsDay);
+
+    d.week[weekIdx].on = true;
+    d.week[weekIdx].flights.push({
+      airlineCode,
+      airlineName: f.airline?.name || airlineCode,
+      flightNumber: f.number || "—",
+      aircraft: f.aircraft?.model || "—",
+      depTime: depLocal.slice(11,16) || "—",
+    });
+  });
+
+  console.log(`[FlightFinder] Matching stats — total flights: ${flights.length}, matched: ${matchedCandidate} (of which ${matchedByName} by name fallback), no destination info: ${noDestInfo}, not a candidate: ${notACandidate}, not standby-eligible: ${notStandbyAirline}, no departure time: ${noDepTime}`);
+
+  return Object.values(candidates).map(d => {
+    const distanceKm = haversineKm(originLat, originLon, d.lat, d.lon);
+    const estMinutes = estimateDurationMinutes(distanceKm);
+    const hasScheduleData = d.week.some(w => w.on);
+    // AeroDataBox's own averageDailyFlights blends every airline on the
+    // route (including ones we can't standby on), which overstates real
+    // opportunity — e.g. it counted Thai Airways for SYD-BKK even though
+    // only the Qantas flight is usable. Recomputed here from the actual
+    // weekly schedule we just fetched, already filtered to standby-eligible
+    // carriers only, so it reflects real chances rather than total traffic.
+    const standbyFlightsThisWeek = d.week.reduce((sum, w) => sum + w.flights.length, 0);
+    return {
+      ...d,
+      durationLabel: `~${formatDuration(estMinutes)}`,
+      durationMinutes: estMinutes,
+      hasScheduleData,
+      avgDailyFlights: hasScheduleData ? standbyFlightsThisWeek / 7 : null,
+    };
+  });
+}
+
+/* ============================================================
+   STEP C — climate AND humidity estimate for the selected travel
+   window, using last year's actual weather for the same calendar
+   dates (Open-Meteo's free historical archive, no key needed).
+   ============================================================ */
+function humidityLevelFromPct(pct){
+  if (pct == null) return "medium";
+  if (pct < 55) return "low";
+  if (pct < 75) return "medium";
+  return "high";
+}
+
+async function fetchClimateEstimate(lat, lon, windowStart, windowEnd){
+  const shiftYear = (isoDate, years) => {
+    const d = new Date(isoDate);
+    d.setFullYear(d.getFullYear() + years);
+    return d.toISOString().slice(0,10);
+  };
+  const start = shiftYear(windowStart, -1);
+  const end = shiftYear(windowEnd, -1);
+
+  // Daily max/min temperature is a well-supported archive aggregate.
+  // Humidity's daily *mean* aggregate isn't reliably available on the
+  // historical archive endpoint, so we pull hourly humidity instead and
+  // average it ourselves — hourly fields are solidly supported here.
+  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}` +
+              `&start_date=${start}&end_date=${end}` +
+              `&daily=temperature_2m_max,temperature_2m_min` +
+              `&hourly=relative_humidity_2m&timezone=auto`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Open-Meteo returned ${res.status}`);
+  const data = await res.json();
+  const maxes = data.daily?.temperature_2m_max || [];
+  const mins = data.daily?.temperature_2m_min || [];
+  const humidityHourly = data.hourly?.relative_humidity_2m || [];
+  if (!maxes.length) return null;
+
+  const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
+  const humidityPct = humidityHourly.length ? Math.round(avg(humidityHourly)) : null;
+  return {
+    min: Math.round(avg(mins)),
+    max: Math.round(avg(maxes)),
+    humidityPct,
+    humidityLevel: humidityLevelFromPct(humidityPct),
+  };
+}
+
+/* ============================================================
+   ORCHESTRATION
+   ============================================================ */
+async function loadEverything(originCode){
+  grid.innerHTML = "";
+  resultCount.textContent = "— destinations";
+  setProgress(0, null);
+  const warnings = [];
+
+  const includeDomestic = document.getElementById("domesticToggle").classList.contains("active");
+
+  setStatus(`Looking up ${originCode}'s route network…`);
+  let routes;
+  try {
+    routes = await fetchRoutes(originCode);
+  } catch (err) {
+    console.error(err);
+    setStatus(`Couldn't load the route network: ${err.message}. Check the console for details.`, true);
+    return;
+  }
+
+  const candidatesResult = buildCandidatesFromRoutes(routes, includeDomestic);
+
+  if (!Object.keys(candidatesResult.candidates).length) {
+    setStatus(`No standby-eligible destinations found from ${originCode}.`);
+    destinations = [];
+    render();
+    return;
+  }
+
+  setStatus(`Found ${Object.keys(candidatesResult.candidates).length} standby-eligible destinations · loading this week's schedule (this takes ~15-20s due to rate limits)…`);
+  let flights = [];
+  try {
+    flights = await fetchWeekSchedule(originCode, (done, total) => {
+      setStatus(`Loading this week's schedule… (${done}/${total} time windows fetched)`);
+      setProgress(done, total);
+    });
+  } catch (err) {
+    console.error(err);
+    warnings.push(`Weekly schedule lookup failed (${err.message}) — destinations will show without day-by-day flight detail. See console for the exact request that failed.`);
+  }
+  setProgress(0, null);
+
+  const originLatLon = originCoords(originCode) || { lat: 0, lon: 0 };
+  if (!originCoords(originCode)) console.warn(`[FlightFinder] No coordinates on file for origin ${originCode} — flight time estimates will be wrong. Add it to the originAirports list.`);
+  destinations = fillWeekFromFlights(candidatesResult, flights, originLatLon.lat, originLatLon.lon);
+
+  setStatus(`Fetching climate + humidity estimates for ${destinations.length} destinations…`);
+  const windowStart = document.getElementById("windowStart").value;
+  const windowEnd = document.getElementById("windowEnd").value;
+
+  let climateFailures = 0;
+  for (let i = 0; i < destinations.length; i++) {
+    const d = destinations[i];
+    setStatus(`Fetching climate + humidity… (${i + 1}/${destinations.length})`);
+    setProgress(i + 1, destinations.length);
+    try {
+      d.climate = await fetchClimateEstimate(d.lat, d.lon, windowStart, windowEnd);
+    } catch (err) {
+      console.warn(`Climate lookup failed for ${d.code}`, err);
+      d.climate = null;
+      climateFailures++;
+    }
+    if (i < destinations.length - 1) await sleep(150); // avoid Open-Meteo's burst rate limit
+  }
+  setProgress(0, null);
+  if (climateFailures) warnings.push(`Climate/humidity lookup failed for ${climateFailures} destination${climateFailures === 1 ? "" : "s"} — see console.`);
+
+  const now = new Date();
+  const successLine = `Live from AeroDataBox + Open-Meteo · last updated ${now.toLocaleTimeString()} · <button id="refreshBtn">Force refresh (uses quota)</button>`;
+  const warningLines = warnings.map(w => `⚠ ${w}`).join("<br>");
+  setStatus(warningLines ? `${warningLines}<br>${successLine}` : successLine, warnings.length > 0);
+  document.getElementById("refreshBtn").addEventListener("click", () => forceRefresh());
+
+  render();
+}
+
+function updateWindowLabel(){
+  const start = document.getElementById("windowStart").value;
+  const end = document.getElementById("windowEnd").value;
+  const fmt = iso => iso ? new Date(iso + "T00:00").toLocaleDateString("en-AU", { day:"numeric", month:"short" }) : null;
+  const label = document.getElementById("windowLabel");
+  label.textContent = (start && end) ? `${fmt(start)} – ${fmt(end)}` : "your dates";
+}
+
+function runSearch(){
+  const windowStart = document.getElementById("windowStart").value;
+  const windowEnd = document.getElementById("windowEnd").value;
+  if (!windowStart || !windowEnd) {
+    setStatus("Set both travel window dates before searching.", true);
+    return;
+  }
+  updateWindowLabel();
+  const originCode = originCodeBtn.textContent;
+  // Deliberately NOT clearing the cache here — Search should reuse route
+  // and schedule data from the last 24 hours if it's available, so
+  // re-running a search for the same origin doesn't cost AeroDataBox
+  // quota twice. Only the explicit "force refresh" action below bypasses
+  // the cache on purpose.
+  loadEverything(originCode);
+}
+
+function forceRefresh(){
+  const originCode = originCodeBtn.textContent;
+  localStorage.removeItem(`ff_routes_${originCode}`);
+  localStorage.removeItem(`ff_schedule_${originCode}`);
+  loadEverything(originCode);
+}
+
+document.getElementById("mobileFiltersToggle").addEventListener("click", () => {
+  const aside = document.querySelector("aside.filters");
+  const btn = document.getElementById("mobileFiltersToggle");
+  aside.classList.toggle("mobile-open");
+  btn.classList.toggle("open");
+});
+
+document.getElementById("searchBtn").addEventListener("click", () => {
+  runSearch();
+  // On mobile, collapse the filters panel back down once a search is fired
+  // so the person lands straight on results, not a wall of filters.
+  const aside = document.querySelector("aside.filters");
+  const btn = document.getElementById("mobileFiltersToggle");
+  if (window.innerWidth <= 860) {
+    aside.classList.remove("mobile-open");
+    btn.classList.remove("open");
+  }
+});
+document.getElementById("windowStart").addEventListener("change", updateWindowLabel);
+document.getElementById("windowEnd").addEventListener("change", updateWindowLabel);
+
+/* ============================================================
+   RENDERING + FILTERS
+   ============================================================ */
+function humidityAllowed(destLevel, selected){
+  const order = {low:0, medium:1, high:2};
+  return order[destLevel] <= order[selected];
+}
+
+function render(){
+  const humiditySel = document.getElementById("humiditySelect").value;
+  const qantasOnly = document.getElementById("qantasOnlyToggle").classList.contains("active");
+  const tempMin = +document.getElementById("tempMin").value;
+  const tempMax = +document.getElementById("tempMax").value;
+  const maxDuration = +document.getElementById("durationMax").value * 60;
+
+  document.getElementById("tempMinLabel").textContent = tempMin + "°";
+  document.getElementById("tempMaxLabel").textContent = tempMax + "°";
+  document.getElementById("durationLabel").textContent = "Up to " + document.getElementById("durationMax").value + " hrs";
+
+  grid.innerHTML = "";
+  let visibleCount = 0;
+
+  destinations.forEach((d, i) => {
+    const hasQantas = d.standbyOperatorCodes.has("QF");
+    const humidityLevel = d.climate ? d.climate.humidityLevel : "medium";
+    const passesHumidity = humidityAllowed(humidityLevel, humiditySel);
+    const passesAirline = !qantasOnly || hasQantas;
+    const passesDuration = !d.durationMinutes || d.durationMinutes <= maxDuration;
+    const passesTemp = !d.climate || (d.climate.min >= tempMin && d.climate.max <= tempMax);
+    const visible = passesHumidity && passesAirline && passesDuration && passesTemp;
+    if (visible) visibleCount++;
+
+    const climateLabel = d.climate ? `${d.climate.min}–${d.climate.max}°` : "No data";
+    const humidityLabel = d.climate?.humidityPct != null
+      ? `${humidityLevel[0].toUpperCase()+humidityLevel.slice(1)} (${d.climate.humidityPct}%)`
+      : "Medium (est.)";
+
+    const scene = document.createElement("div");
+    scene.className = "card-scene" + (visible ? "" : " hidden");
+    scene.innerHTML = `
+      <div class="card">
+        <div class="face front">
+          <p class="dest-name">${d.city}</p>
+          <p class="dest-country">${d.country}</p>
+          <div class="stat-row"><span class="stat-label">Climate</span><span class="stat-value">${climateLabel}</span></div>
+          <div class="stat-row"><span class="stat-label">Humidity</span><span class="stat-value">${humidityLabel}</span></div>
+          <div class="stat-row"><span class="stat-label">Est. flight time</span><span class="stat-value">${d.durationLabel}</span></div>
+          <div class="badge-row">
+            <span class="badge nonstop">Nonstop</span>
+            <span class="badge clear" data-tooltip="Based on this week's actual schedule, standby-eligible airlines only — not AeroDataBox's raw route average, which includes airlines you can't standby on">${d.avgDailyFlights != null ? `~${d.avgDailyFlights.toFixed(1)} flights/day` : "No schedule data"}</span>
+          </div>
+        </div>
+        <div class="face back">
+          <div class="back-head">
+            <div class="back-title">
+              <h4>${d.city}</h4>
+              <span class="week-sub">this week</span>
+            </div>
+            <div class="route-code">${originCodeBtn.textContent}<br>&gt;${d.code}</div>
+          </div>
+          <div class="week-row">
+            ${d.week.map(w => {
+              const uniqueAirlines = [...new Map(w.flights.map(f => [f.airlineCode, f])).values()];
+              const total = w.flights.length;
+              const breakdown = uniqueAirlines.map(f => {
+                const count = w.flights.filter(x => x.airlineCode === f.airlineCode).length;
+                return `${count} ${f.airlineName}`;
+              }).join(", ");
+              const circleTitle = total ? `${total} flight${total === 1 ? "" : "s"}: ${breakdown}` : "No flights";
+              return `
+              <div class="flap ${w.on ? 'on' : ''}">
+                <span class="day">${w.day}</span>
+                <div class="circle" data-tooltip="${circleTitle}"></div>
+                <div class="codes">${uniqueAirlines.map(f => {
+                  const brand = airlineBrand(f.airlineCode);
+                  return `<span class="code" style="background:${brand.bg};color:${brand.text};" data-tooltip="${f.airlineName}">${f.airlineCode}</span>`;
+                }).join("")}</div>
+              </div>`;
+            }).join("")}
+          </div>
+          <button class="plan-btn" data-idx="${i}">Trip planner →</button>
+        </div>
+      </div>
+    `;
+    scene.addEventListener("click", (e) => {
+      if (e.target.closest(".plan-btn")) return;
+      scene.classList.toggle("flipped");
+    });
+    grid.appendChild(scene);
+  });
+
+  resultCount.textContent = `${visibleCount} destination${visibleCount === 1 ? "" : "s"}`;
+}
+
+grid.addEventListener("click", (e) => {
+  const btn = e.target.closest(".plan-btn");
+  if (!btn) return;
+  e.stopPropagation();
+  openPlanner(destinations[+btn.dataset.idx]);
+});
+
+["humiditySelect"].forEach(id => document.getElementById(id).addEventListener("change", render));
+["tempMin","tempMax","durationMax"].forEach(id => document.getElementById(id).addEventListener("input", render));
+document.getElementById("allAirlinesToggle").addEventListener("click", () => {
+  document.getElementById("allAirlinesToggle").classList.add("active");
+  document.getElementById("qantasOnlyToggle").classList.remove("active");
+  render();
+});
+document.getElementById("qantasOnlyToggle").addEventListener("click", () => {
+  document.getElementById("qantasOnlyToggle").classList.add("active");
+  document.getElementById("allAirlinesToggle").classList.remove("active");
+  render();
+});
+document.getElementById("domesticToggle").addEventListener("click", () => {
+  document.getElementById("domesticToggle").classList.toggle("active");
+  // Scope change needs a fresh route fetch to include/exclude domestic
+  // candidates properly — client-side re-render can't invent data that
+  // was never fetched, so this just flags it rather than re-fetching
+  // automatically (that's what the Search button is for).
+  if (destinations.length) {
+    setStatus("Scope changed — hit Search again to apply it.", true);
+  }
+});
+
+/* ============================================================
+   TRIP PLANNER
+   ============================================================ */
+function openPlanner(d){
+  document.getElementById("plannerCity").textContent = d.city;
+  document.querySelector(".planner-sub").textContent = `${originCodeBtn.textContent} → ${d.code} · nonstop`;
+  renderPlannerForDate(d, document.getElementById("plannerDateInput").value);
+  document.getElementById("overlay").classList.add("open");
+  document.getElementById("plannerDateInput").onchange = (e) => renderPlannerForDate(d, e.target.value);
+}
+
+function renderPlannerForDate(d, isoDate){
+  const jsDay = new Date(isoDate).getDay();
+  const weekIdx = WEEKDAY_ORDER.indexOf(jsDay);
+  const dayData = d.week[weekIdx];
+  const rows = document.getElementById("plannerRows");
+
+  if (!dayData.flights.length) {
+    const msg = d.hasScheduleData
+      ? "No standby-eligible nonstop flights on this weekday, based on this week's schedule."
+      : "No schedule data matched for this destination — flight time shown is a distance-based estimate only.";
+    rows.innerHTML = `<tr><td colspan="6" style="color:var(--text-muted);font-family:'Manrope',sans-serif;">${msg}</td></tr>`;
+    return;
+  }
+  rows.innerHTML = dayData.flights.map(f => {
+    const [h, m] = f.depTime.split(":").map(Number);
+    const depMinutesTotal = h * 60 + m;
+    const estArrMinutesTotal = (depMinutesTotal + d.durationMinutes) % (24 * 60);
+    const estArr = `${String(Math.floor(estArrMinutesTotal/60)).padStart(2,"0")}:${String(estArrMinutesTotal%60).padStart(2,"0")} (est.)`;
+    return `
+    <tr>
+      <td class="airline-cell">${f.airlineName}</td>
+      <td>${f.flightNumber}</td>
+      <td>${f.aircraft}</td>
+      <td>${f.depTime}</td>
+      <td>${estArr}</td>
+      <td>${d.durationLabel}</td>
+    </tr>
+  `;
+  }).join("");
+}
+
+function closePlanner(){
+  document.getElementById("overlay").classList.remove("open");
+}
+
+/* ============================================================
+   BOOT — no auto-fetch, wait for the person to set dates and
+   press Search (saves burning the free quota on every page load).
+   ============================================================ */
+grid.innerHTML = `<div class="empty-state">Set your travel window and filters, then hit Search.</div>`;
+</script>
+
+</body>
+</html>
