@@ -215,6 +215,13 @@
   .face.back{transform:rotateY(180deg);}
 
   .face.front .dest-name{font-size:19px;font-weight:800;margin:0;}
+  .shortlist-tick{
+    position:absolute;top:14px;right:14px;width:20px;height:20px;
+    border-radius:50%;border:2px solid var(--line);background:#fff;
+    cursor:pointer;z-index:5;
+  }
+  .shortlist-tick:hover{border-color:var(--red);}
+  .shortlist-tick.checked{background:var(--red);border-color:var(--red);}
   .face.front .dest-country{font-size:12px;color:var(--text-muted);margin:2px 0 12px;}
   .stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
   .stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;}
@@ -226,6 +233,24 @@
     border:1px solid var(--line);color:var(--text-muted);
   }
   .badge.nonstop{border-color:#f0aab6;color:var(--red-dark);background:var(--red-tint);}
+  .badge.onestop{border-color:#e0c68a;color:#8a6a1f;background:#FCF3DD;}
+  .badge.hub-flag{border-color:#a8c4db;color:#1f5a8a;background:#E8F1F9;font-weight:700;}
+
+  .carrier-list{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+  .hub-tabs{display:flex;gap:5px;margin-bottom:8px;}
+  .hub-tab{
+    background:#fff;border:1.5px solid var(--line);color:var(--text-muted);
+    font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;
+    padding:4px 9px;border-radius:999px;cursor:pointer;
+  }
+  .hub-tab.active{border-color:var(--red);color:var(--red-dark);background:var(--red-tint);}
+  .hub-tab:hover{border-color:var(--red);}
+  .carrier-list-note{font-size:10px;color:var(--text-muted);line-height:1.5;margin:0 0 10px;}
+  .carrier-chips{display:flex;flex-direction:column;gap:5px;overflow-y:auto;}
+  .carrier-chip{
+    font-size:11px;font-weight:600;padding:6px 9px;border-radius:6px;
+    font-family:'IBM Plex Mono',monospace;
+  }
   .badge.clear{border-color:var(--line);color:var(--text-muted);}
 
   .face.back .back-head{
@@ -343,6 +368,7 @@
     gap:16px;
   }
   .status-bar.error{color:var(--red-dark);background:var(--red-tint);border-color:#f0aab6;}
+  .hub-status{background:var(--bg);font-size:11px;}
   .status-bar button{
     background:none;border:1px solid var(--line);color:var(--text);
     font-family:'IBM Plex Mono',monospace;font-size:11px;
@@ -457,6 +483,19 @@
   .search-btn:hover{background:var(--red-dark);}
   .search-btn:disabled{background:var(--line);color:var(--text-muted);cursor:not-allowed;}
 
+  .btn-quota{
+    background:#F9A01B;color:#fff;border:none;
+    font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:11px;
+    padding:6px 12px;border-radius:999px;cursor:pointer;
+  }
+  .btn-quota:hover{background:#DC8B0E;}
+  .btn-neutral{
+    background:#fff;color:var(--text);border:1.5px solid var(--text);
+    font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:11px;
+    padding:5px 11px;border-radius:999px;cursor:pointer;
+  }
+  .btn-neutral:hover{background:var(--text);color:#fff;}
+
   .empty-state{
     grid-column:1 / -1;
     text-align:center;padding:60px 20px;color:var(--text-muted);
@@ -504,10 +543,9 @@
     <div class="filter-group">
       <label class="title">Stops</label>
       <div class="toggle-row">
-        <div class="toggle active"><span>Nonstop only</span><span class="dot"></span></div>
-        <div class="toggle" style="opacity:0.45;cursor:not-allowed;" title="Not available yet — see note below"><span>1 stop or fewer (not yet supported)</span><span class="dot"></span></div>
+        <div class="toggle active" id="nonstopOnlyToggle"><span>Nonstop</span><span class="dot"></span></div>
+        <div class="toggle" id="oneStopToggle"><span>1 stop</span><span class="dot"></span></div>
       </div>
-      <p class="helper">This build only reads direct flights off the departure board — connections are a later phase.</p>
     </div>
 
     <div class="filter-group">
@@ -530,12 +568,7 @@
     <div class="filter-group">
       <label class="title">Max flight time</label>
       <div class="range-labels"><span id="durationLabel">Up to 10 hrs</span></div>
-      <input type="range" id="durationMax" min="1" max="20" value="10">
-    </div>
-
-    <div class="filter-group">
-      <div class="toggle active"><span>Smartraveller clear only</span><span class="dot"></span></div>
-      <p class="helper">Excludes destinations currently rated "reconsider your need to travel" or worse.</p>
+      <input type="range" id="durationMax" min="1" max="24" value="10">
     </div>
 
     <div class="filter-group">
@@ -550,9 +583,17 @@
     <div class="filter-group">
       <label class="title">Scope</label>
       <div class="toggle-row">
-        <div class="toggle" id="domesticToggle"><span>Include AU domestic routes</span><span class="dot"></span></div>
+        <div class="toggle" id="domesticToggle"><span>Include domestic routes</span><span class="dot"></span></div>
       </div>
-      <p class="helper">Off by default — this is built for international standby travel, but QantasLink domestic hops are in the same data if you want them.</p>
+      <div class="toggle-row" id="hubDomesticToggles" style="margin-top:8px;"></div>
+    </div>
+
+    <div class="filter-group">
+      <label class="title">Other</label>
+      <div class="toggle-row">
+        <div class="toggle" id="majorOnlyToggle"><span>Major airports only</span><span class="dot"></span></div>
+        <div class="toggle active" id="smartravellerToggle"><span>Smartraveller clear only</span><span class="dot"></span></div>
+      </div>
     </div>
 
     <button id="searchBtn" class="search-btn" type="button">Search flights</button>
@@ -561,13 +602,25 @@
   <main>
     <div class="main-head">
       <h2>Matching <b id="windowLabel">your dates</b> · click a card to see the week</h2>
-      <span class="count" id="resultCount">— destinations</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="shortlistToggleBtn" class="btn-neutral" style="display:none;">0 in shortlist</button>
+        <span class="count" id="resultCount">— destinations</span>
+      </div>
     </div>
     <div id="statusBar" class="status-bar">
       <span id="statusText"></span>
       <div id="progressTrack" class="progress-track" style="display:none;">
         <div id="progressFill" class="progress-fill"></div>
         <span id="progressPlane" class="progress-plane">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path d="M2 12l19-9-6 9 6 9-19-9z" fill="#ffffff" stroke="#1B1F23" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+    </div>
+    <div id="hubStatusBar" class="status-bar hub-status" style="display:none;">
+      <span id="hubStatusText"></span>
+      <div id="hubProgressTrack" class="progress-track" style="display:none;">
+        <div id="hubProgressFill" class="progress-fill"></div>
+        <span id="hubProgressPlane" class="progress-plane">
           <svg viewBox="0 0 24 24" width="14" height="14"><path d="M2 12l19-9-6 9 6 9-19-9z" fill="#ffffff" stroke="#1B1F23" stroke-width="1.5" stroke-linejoin="round"/></svg>
         </span>
       </div>
@@ -594,7 +647,7 @@
       </thead>
       <tbody id="plannerRows"></tbody>
     </table>
-    <div class="note">Airline, flight number, aircraft and departure time are live from AeroDataBox's schedule for this week. Arrival time and flight duration are distance-based estimates (great-circle distance ÷ typical cruise speed, plus a taxi/climb buffer) — AeroDataBox's free-tier schedule endpoint doesn't return arrival times, so this is the honest substitute rather than invented precision.</div>
+    <div class="note">Airline, flight number, aircraft and departure time are live from AeroDataBox's schedule for this week. Arrival time and flight duration are distance-based estimates (great-circle distance ÷ typical cruise speed, plus a taxi/climb buffer) — AeroDataBox's free-tier schedule endpoint doesn't return arrival times, so this is the honest substitute rather than invented precision. For 1-stop destinations, both legs are shown separately rather than paired into a specific itinerary — cross-check a leg 1 arrival estimate against a leg 2 departure time yourself to judge whether a given connection is realistic.</div>
   </div>
 </div>
 
@@ -606,7 +659,7 @@
 // This key lives in plain text because this is a static site with
 // no server. Fine for a free-tier key on a private family tool —
 // just don't reuse it anywhere sensitive.
-const RAPIDAPI_KEY = "11f5e30381mshad4e12af7ee7182p1cc55fjsn85fc1b8fafa9";
+const RAPIDAPI_KEY = "09a5d91fcamsh7ce9a3fcd391a76p1b0e1ajsn4392fbf25229";
 const RAPIDAPI_HOST = "aerodatabox.p.rapidapi.com";
 
 // Every airline coded in the Qantas codeshare/interline PDF, plus QF itself.
@@ -617,6 +670,53 @@ const STANDBY_AIRLINES = new Set([
 
 const WEEKDAY_ORDER = [1,2,3,4,5,6,0]; // Mon..Sun, mapped to JS getDay() values
 const WEEKDAY_LABELS = ["Mo","Tu","We","Th","Fr","Sa","Su"];
+
+// 1-stop connection hubs, checked in this order when the opt-in hub
+// check runs. Only routes data is ever fetched for these (cheap,
+// long-cached) — real schedules are never fetched for a hub unless it's
+// searched directly as an origin.
+// This tool is for finding the right destination — climate, humidity,
+// travel-advisory status — not for booking-grade schedule precision.
+// A route flown "daily" this week is still basically always daily a
+// month from now, so caching aggressively here is the right trade:
+// far fewer AeroDataBox calls, at the cost of the odd stale flight
+// count you'd catch anyway when you actually go to book.
+const CACHE_DAYS = 31;
+
+const HUB_CODES = ["SIN", "LAX", "DXB", "HKG", "HND"];
+const ASSUMED_LAYOVER_MINUTES = 150; // placeholder shown until real schedule data replaces it
+
+// Home country for each hub, used to filter out "domestic to the hub"
+// destinations by default (e.g. LAX -> Boston isn't an interesting 1-stop
+// discovery; LAX -> Cancún is). One toggle per country appears in Scope.
+const HUB_COUNTRY = { SIN: "SG", LAX: "US", DXB: "AE", HKG: "HK", HND: "JP" };
+const HUB_COUNTRIES = [...new Set(Object.values(HUB_COUNTRY))];
+
+// Max destinations kept per hub after ranking (see rankAndCapCandidates) —
+// keeps climate-lookup time bounded even when a hub's raw route count is huge.
+const MAX_PER_HUB = 20;
+
+// Prevents two full search chains (main + background hub loop) running at
+// once — each paces its own calls carefully, but two independently-paced
+// chains overlapping can still collide and trip the per-second rate limit.
+let searchInProgress = false;
+
+// code -> "large" | "medium", from the same worldwide airport dataset
+// used for the origin search box. Used both to rank/cap 1-stop hub
+// results and as an optional "major airports only" display filter.
+const AIRPORT_SIZE = {};
+(originAirportsSizeSource => {
+  originAirportsSizeSource.forEach(a => { if (a.size) AIRPORT_SIZE[a.code] = a.size; });
+})(typeof WORLD_AIRPORTS !== "undefined" ? WORLD_AIRPORTS : []);
+
+// code -> ISO country, same source. Origin can be any airport worldwide
+// now, not just AU ones, so "domestic" has to be worked out from whatever
+// origin is actually selected rather than hardcoded.
+const AIRPORT_COUNTRY = {};
+(src => { src.forEach(a => { if (a.country) AIRPORT_COUNTRY[a.code] = a.country; }); })(typeof WORLD_AIRPORTS !== "undefined" ? WORLD_AIRPORTS : []);
+function originCountryCode(originCode){
+  return AIRPORT_COUNTRY[originCode] || null;
+}
 
 const countryNamer = (() => {
   try { return new Intl.DisplayNames(["en"], { type: "region" }); }
@@ -677,6 +777,7 @@ originOptions.addEventListener("click", (e) => {
   grid.innerHTML = `<div class="empty-state">Origin changed to ${opt.dataset.code} — hit Search to load flights.</div>`;
   resultCount.textContent = "— destinations";
   setStatus("");
+  updateDomesticToggleLabel();
 });
 document.addEventListener("click", (e) => {
   if (!originBox.contains(e.target)) originPopover.classList.remove("open");
@@ -686,6 +787,8 @@ document.addEventListener("click", (e) => {
    STATE + DOM HANDLES
    ============================================================ */
 let destinations = []; // populated by loadEverything()
+let shortlist = new Set(); // destination codes, session-only
+let showShortlistOnly = false;
 const grid = document.getElementById("grid");
 const statusBar = document.getElementById("statusBar");
 const resultCount = document.getElementById("resultCount");
@@ -705,11 +808,27 @@ function setProgress(current, total){
   plane.style.left = pct + "%";
 }
 
+function setHubStatus(html){
+  const bar = document.getElementById("hubStatusBar");
+  bar.style.display = html ? "flex" : "none";
+  document.getElementById("hubStatusText").innerHTML = html;
+}
+function setHubProgress(current, total){
+  const track = document.getElementById("hubProgressTrack");
+  const fill = document.getElementById("hubProgressFill");
+  const plane = document.getElementById("hubProgressPlane");
+  if (total == null) { track.style.display = "none"; return; }
+  track.style.display = "block";
+  const pct = Math.min(100, Math.round((current / total) * 100));
+  fill.style.width = pct + "%";
+  plane.style.left = pct + "%";
+}
+
 /* ============================================================
    STEP A — discover the real route network for this origin.
    This is the actual destination list (city, country, coordinates,
    operating airlines, average daily frequency) — no shortlist,
-   no guessing. Cached 14 days per origin — route networks rarely
+   no guessing. Cached 31 days per origin — route networks rarely
    change day to day, so a longer cache here costs almost nothing
    in accuracy while protecting the free AeroDataBox quota.
    ============================================================ */
@@ -719,7 +838,7 @@ async function fetchRoutes(originCode){
   if (cached) {
     const parsed = JSON.parse(cached);
     const ageHours = (Date.now() - parsed.fetchedAt) / 3600000;
-    if (ageHours < 24 * 14) return parsed.data;
+    if (ageHours < 24 * CACHE_DAYS) return parsed.data;
   }
 
   const today = new Date().toISOString().slice(0,10);
@@ -797,13 +916,13 @@ function estimateDurationMinutes(distanceKm){
 function formatDuration(mins){
   return `${Math.floor(mins/60)}h ${mins%60}m`;
 }
-function buildCandidatesFromRoutes(routes, includeDomestic){
+function buildCandidatesFromRoutes(routes, excludeCountryCode){
   const candidates = {};
   const byName = {};
   routes.forEach(r => {
     const dest = r.destination;
     if (!dest?.iata || !dest?.location) return; // skip entries with no usable IATA/coords (e.g. tiny strips)
-    if (!includeDomestic && dest.countryCode === "AU") return;
+    if (excludeCountryCode && dest.countryCode === excludeCountryCode) return;
 
     const standbyOperators = (r.operators || []).filter(op => op.iata && STANDBY_AIRLINES.has(op.iata));
     if (!standbyOperators.length) return; // no airline we can actually standby on flies this route
@@ -816,7 +935,9 @@ function buildCandidatesFromRoutes(routes, includeDomestic){
       lat: dest.location.lat,
       lon: dest.location.lon,
       avgDailyFlights: r.averageDailyFlights,
+      airportSize: AIRPORT_SIZE[dest.iata] || "unknown",
       standbyOperatorCodes: new Set(standbyOperators.map(op => op.iata)),
+      standbyOperators: standbyOperators.map(op => ({ iata: op.iata, name: op.name })),
       week: WEEKDAY_LABELS.map(d => ({ day: d, on: false, flights: [] })),
       durations: [],
     };
@@ -845,10 +966,12 @@ async function fetchWeekSchedule(originCode, onProgress){
   if (cached) {
     const parsed = JSON.parse(cached);
     const ageHours = (Date.now() - parsed.fetchedAt) / 3600000;
-    // 3 days, not longer — this data is always "the next 7 days from
-    // whenever it was fetched," so letting it get too stale means it
-    // increasingly describes a week that's already partly in the past.
-    if (ageHours < 24 * 3) return parsed.data;
+    // 31 days — this data is always "the next 7 days from whenever it
+    // was fetched," so a month-old cache will show slightly the wrong
+    // week. Deliberately fine for this tool: it's for finding the right
+    // destination, not booking-grade precision, and any real discrepancy
+    // shows up naturally when you actually go to check a specific date.
+    if (ageHours < 24 * CACHE_DAYS) return parsed.data;
   }
 
   // The FIDS "by time range" endpoint caps each request at 12 hours,
@@ -872,18 +995,32 @@ async function fetchWeekSchedule(originCode, onProgress){
 
     const url = `https://${RAPIDAPI_HOST}/flights/airports/iata/${originCode}/${from}/${to}` +
                 `?direction=Departure&withLeg=false&withCancelled=false&withCodeshared=true&withCargo=false&withPrivate=false&withLocation=true`;
-    const res = await fetch(url, {
-      headers: { "X-RapidAPI-Key": RAPIDAPI_KEY, "X-RapidAPI-Host": RAPIDAPI_HOST }
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`Schedule window ${from}–${to} returned ${res.status}${body ? `: ${body}` : ""}`);
+
+    // Self-heal on a stray 429 rather than aborting the whole 14-call
+    // fetch — a single rate-limit hiccup shouldn't cost the entire
+    // search. Backs off progressively (3s, then 6s) before giving up.
+    let flights = null;
+    for (let attempt = 0; attempt <= 2; attempt++) {
+      const res = await fetch(url, {
+        headers: { "X-RapidAPI-Key": RAPIDAPI_KEY, "X-RapidAPI-Host": RAPIDAPI_HOST }
+      });
+      if (res.status === 429 && attempt < 2) {
+        const backoffMs = 3000 * (attempt + 1);
+        if (onProgress) onProgress(i + 1, windows.length, `rate-limited, retrying in ${backoffMs/1000}s…`);
+        await sleep(backoffMs);
+        continue;
+      }
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(`Schedule window ${from}–${to} returned ${res.status}${body ? `: ${body}` : ""}`);
+      }
+      const data = await res.json();
+      flights = Array.isArray(data) ? data : (data.departures || []);
+      break;
     }
-    const data = await res.json();
-    const flights = Array.isArray(data) ? data : (data.departures || []);
     allFlights.push(...flights);
 
-    if (i < windows.length - 1) await sleep(1100); // respect 1 req/sec limit
+    if (i < windows.length - 1) await sleep(1400); // respect 1 req/sec limit, with extra margin
   }
 
   localStorage.setItem(cacheKey, JSON.stringify({ fetchedAt: Date.now(), data: allFlights }));
@@ -969,7 +1106,28 @@ function humidityLevelFromPct(pct){
   return "high";
 }
 
+// Climate/humidity results are historical weather for a specific place and
+// date range — once fetched, that answer is never going to change, so this
+// caches far longer than the AeroDataBox data (which is genuinely live).
+const CLIMATE_CACHE_DAYS = 365;
+let lastClimateNetworkCall = 0;
+
 async function fetchClimateEstimate(lat, lon, windowStart, windowEnd){
+  const cacheKey = `ff_climate_${lat.toFixed(3)}_${lon.toFixed(3)}_${windowStart}_${windowEnd}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    const parsed = JSON.parse(cached);
+    const ageDays = (Date.now() - parsed.fetchedAt) / 86400000;
+    if (ageDays < CLIMATE_CACHE_DAYS) return parsed.data;
+  }
+
+  // Only pace actual network calls, not cache hits — repeat searches that
+  // reuse mostly-cached destinations shouldn't crawl at the same speed as
+  // a cold search just because of a fixed per-call delay.
+  const sinceLastCall = Date.now() - lastClimateNetworkCall;
+  if (sinceLastCall < 150) await sleep(150 - sinceLastCall);
+  lastClimateNetworkCall = Date.now();
+
   const shiftYear = (isoDate, years) => {
     const d = new Date(isoDate);
     d.setFullYear(d.getFullYear() + years);
@@ -996,21 +1154,30 @@ async function fetchClimateEstimate(lat, lon, windowStart, windowEnd){
 
   const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
   const humidityPct = humidityHourly.length ? Math.round(avg(humidityHourly)) : null;
-  return {
+  const result = {
     min: Math.round(avg(mins)),
     max: Math.round(avg(maxes)),
     humidityPct,
     humidityLevel: humidityLevelFromPct(humidityPct),
   };
+  localStorage.setItem(cacheKey, JSON.stringify({ fetchedAt: Date.now(), data: result }));
+  return result;
 }
 
 /* ============================================================
    ORCHESTRATION
    ============================================================ */
 async function loadEverything(originCode){
+  searchInProgress = true;
+  document.getElementById("searchBtn").disabled = true;
+
   grid.innerHTML = "";
   resultCount.textContent = "— destinations";
   setProgress(0, null);
+  setHubStatus("");
+  setHubProgress(0, null);
+  shortlist = new Set();
+  showShortlistOnly = false;
   const warnings = [];
 
   const includeDomestic = document.getElementById("domesticToggle").classList.contains("active");
@@ -1022,15 +1189,19 @@ async function loadEverything(originCode){
   } catch (err) {
     console.error(err);
     setStatus(`Couldn't load the route network: ${err.message}. Check the console for details.`, true);
+    searchInProgress = false;
+    document.getElementById("searchBtn").disabled = false;
     return;
   }
 
-  const candidatesResult = buildCandidatesFromRoutes(routes, includeDomestic);
+  const candidatesResult = buildCandidatesFromRoutes(routes, includeDomestic ? null : originCountryCode(originCode));
 
   if (!Object.keys(candidatesResult.candidates).length) {
     setStatus(`No standby-eligible destinations found from ${originCode}.`);
     destinations = [];
     render();
+    searchInProgress = false;
+    document.getElementById("searchBtn").disabled = false;
     return;
   }
 
@@ -1067,19 +1238,208 @@ async function loadEverything(originCode){
       d.climate = null;
       climateFailures++;
     }
-    if (i < destinations.length - 1) await sleep(150); // avoid Open-Meteo's burst rate limit
   }
   setProgress(0, null);
   if (climateFailures) warnings.push(`Climate/humidity lookup failed for ${climateFailures} destination${climateFailures === 1 ? "" : "s"} — see console.`);
 
-  const now = new Date();
-  const successLine = `Live from AeroDataBox + Open-Meteo · last updated ${now.toLocaleTimeString()} · <button id="refreshBtn">Force refresh (uses quota)</button>`;
+  // Show when this flight data was actually fetched, not just-now —
+  // it can legitimately be up to 31 days old thanks to the longer cache,
+  // and pretending otherwise would be misleading.
+  const scheduleCacheRaw = localStorage.getItem(`ff_schedule_${originCode}`);
+  const dataAsOf = scheduleCacheRaw ? new Date(JSON.parse(scheduleCacheRaw).fetchedAt) : new Date();
+  const dataAsOfLabel = dataAsOf.toLocaleDateString("en-AU", { day:"numeric", month:"short" }) + " " + dataAsOf.toLocaleTimeString("en-AU", { hour:"2-digit", minute:"2-digit" });
+
+  const successLine = `Flight data as of ${dataAsOfLabel} · <button id="refreshBtn" class="btn-quota">Force Refresh</button> <button id="clearCacheBtn" class="btn-neutral">Clear Cache</button>`;
   const warningLines = warnings.map(w => `⚠ ${w}`).join("<br>");
   setStatus(warningLines ? `${warningLines}<br>${successLine}` : successLine, warnings.length > 0);
   document.getElementById("refreshBtn").addEventListener("click", () => forceRefresh());
+  document.getElementById("clearCacheBtn").addEventListener("click", () => clearAllCache());
 
   render();
+
+  searchInProgress = false;
+  document.getElementById("searchBtn").disabled = false;
+
+  // 1-stop connections are opt-in, not automatic — checking all 5 hubs
+  // costs roughly 200 units (about a third of the monthly free quota)
+  // in one go, so that's a deliberate choice, not something that should
+  // happen silently on every search.
+  offerOneStopCheck(originCode);
 }
+
+function offerOneStopCheck(originCode){
+  setHubStatus(`Want to check 1-stop connections too? This checks ${HUB_CODES.join(", ")} for destinations and airlines only (flight times are estimated, not live) — roughly 30 AeroDataBox credits, cached for 31 days after. <button id="checkHubsBtn" class="btn-quota">Check 1-stop connections (~30 credits)</button>`);
+  document.getElementById("checkHubsBtn").addEventListener("click", () => {
+    if (searchInProgress) {
+      setHubStatus("A search is already running — try again once it finishes.");
+      return;
+    }
+    searchInProgress = true;
+    document.getElementById("searchBtn").disabled = true;
+    const windowStart = document.getElementById("windowStart").value;
+    const windowEnd = document.getElementById("windowEnd").value;
+    loadOneStopConnections(originCode, windowStart, windowEnd);
+  });
+}
+
+/* ============================================================
+   1-STOP CONNECTIONS (background, runs after the main search)
+   Fetches ROUTES ONLY for each hub — cheap, long-cached — to
+   discover which extra destinations open up via a connection.
+   The expensive weekly SCHEDULE for a hub is deliberately not
+   fetched here; that only happens lazily when someone opens the
+   trip planner for a destination that uses it (see openPlanner).
+   ============================================================ */
+async function loadOneStopConnections(originCode, windowStart, windowEnd){
+  const nonstopCodes = new Set(destinations.filter(d => d.stopType !== "1-stop").map(d => d.code));
+  const originCountry = originCountryCode(originCode);
+  const includeOriginDomestic = document.getElementById("domesticToggle").classList.contains("active");
+
+  for (let i = 0; i < HUB_CODES.length; i++) {
+    const hub = HUB_CODES[i];
+    setHubStatus(`Checking 1-stop options via ${hub}… (${i + 1}/${HUB_CODES.length} hubs) — fetching routes…`);
+    setHubProgress(i, HUB_CODES.length);
+
+    const hubLeg = destinations.find(d => d.code === hub && d.stopType !== "1-stop");
+    if (!hubLeg) {
+      console.warn(`[FlightFinder] ${hub} isn't in this origin's nonstop results, so it can't be used as a 1-stop hub from here — skipping.`);
+      continue;
+    }
+
+    let hubRoutes;
+    try {
+      hubRoutes = await fetchRoutes(hub);
+    } catch (err) {
+      console.warn(`[FlightFinder] Route lookup failed for hub ${hub}`, err);
+      continue;
+    }
+
+    // Domestic-to-the-hub is a separate concept from domestic-to-origin:
+    // LAX -> Boston isn't an interesting 1-stop discovery if you're
+    // starting from Sydney, even though it's not domestic to the origin.
+    // Excluded by default per hub country, with its own toggle in Scope.
+    const hubCountry = HUB_COUNTRY[hub];
+    const includeHubDomestic = hubCountry && document.getElementById(`domestic_${hubCountry}`)?.classList.contains("active");
+    const hubCandidatesResult = buildCandidatesFromRoutes(hubRoutes, includeHubDomestic ? null : hubCountry);
+
+    // Not filtering out destinations we've already found via an earlier
+    // hub anymore — those get merged (see below) rather than dropped, so
+    // a destination reachable via more than one hub shows all of them.
+    // Also excludes anything back in the *origin's* own country — without
+    // this, a route like SYD -> SIN -> Perth slips through, since SIN's
+    // own-country filter only knows about Singapore, not Australia. Same
+    // "Include domestic routes" toggle governs both.
+    const allReachable = Object.values(hubCandidatesResult.candidates)
+      .filter(c => c.code !== originCode && c.code !== hub && !nonstopCodes.has(c.code))
+      .filter(c => includeOriginDomestic || c.countryCode !== originCountry);
+
+    // Big hubs can reach 60+ standby-eligible destinations, most of them
+    // minor regional airports nobody's picking as a destination. Rank by
+    // airport size first (large ahead of medium), then by how often the
+    // route actually flies, and only keep the top MAX_PER_HUB — this is
+    // what keeps the climate-lookup phase from taking forever.
+    const sizeRank = c => c.airportSize === "large" ? 0 : c.airportSize === "medium" ? 1 : 2;
+    const reachable = allReachable
+      .slice()
+      .sort((a, b) => sizeRank(a) - sizeRank(b) || (b.avgDailyFlights || 0) - (a.avgDailyFlights || 0))
+      .slice(0, MAX_PER_HUB);
+
+    if (allReachable.length > reachable.length) {
+      console.log(`[FlightFinder] ${hub}: ${allReachable.length} standby-eligible destinations found, showing the top ${reachable.length} by airport size + frequency.`);
+    }
+
+    if (!reachable.length) {
+      if (i < HUB_CODES.length - 1) await sleep(2500);
+      continue;
+    }
+
+    // Deliberately NOT fetching this hub's full weekly schedule here —
+    // that's the expensive Tier 2 call (~28 units) and doing it for all
+    // 5 hubs upfront is most of the cost of this whole feature. Routes
+    // data alone (Tier 3, 6 units) is enough to know the destination
+    // exists and which airlines serve it; flight time is estimated from
+    // coordinates using the same distance-based formula every nonstop
+    // card already uses — no extra API call needed for that part.
+    // Real flight numbers/times for a specific hub leg are still
+    // available on demand — see the lazy-load in openPlanner() below,
+    // which only spends that ~28 units for the one hub you actually
+    // click into, not all five upfront.
+    setHubStatus(`Checking 1-stop options via ${hub}… (${i + 1}/${HUB_CODES.length} hubs) — fetching climate for ${reachable.length} destinations…`);
+
+    for (const c of reachable) {
+      const legMinutes = estimateDurationMinutes(haversineKm(hubLeg.lat, hubLeg.lon, c.lat, c.lon));
+      const totalMinutes = hubLeg.durationMinutes + ASSUMED_LAYOVER_MINUTES + legMinutes;
+
+      const existing = destinations.find(d => d.code === c.code && d.stopType === "1-stop");
+      if (existing) {
+        // Already reachable via an earlier hub — merge this one in
+        // rather than creating a duplicate card.
+        if (!existing.viaHubs.includes(hub)) existing.viaHubs.push(hub);
+        existing.hubOptions.push({ hub, legMinutes, totalMinutes });
+        existing.hubOperators[hub] = c.standbyOperators;
+        // Show the shortest available option as the headline duration.
+        const best = existing.hubOptions.reduce((a, b) => (b.totalMinutes < a.totalMinutes ? b : a));
+        existing.durationMinutes = best.totalMinutes;
+        existing.durationLabel = `~${formatDuration(best.totalMinutes)}`;
+        existing.bestHub = best.hub;
+        render();
+        continue;
+      }
+
+      const oneStop = {
+        ...c,
+        stopType: "1-stop",
+        viaHubs: [hub],
+        bestHub: hub,
+        hubOptions: [{ hub, legMinutes, totalMinutes }],
+        hubOperators: { [hub]: c.standbyOperators }, // per-hub carrier lists, for the tabbed view
+        viaHubCity: hubLeg.city,
+        week: WEEKDAY_LABELS.map(d => ({ day: d, on: false, flights: [] })),
+        hasScheduleData: false,
+        legDurationMinutes: legMinutes,
+        avgDailyFlights: null,
+        durationMinutes: totalMinutes,
+        durationLabel: `~${formatDuration(totalMinutes)}`,
+      };
+      try {
+        oneStop.climate = await fetchClimateEstimate(oneStop.lat, oneStop.lon, windowStart, windowEnd);
+      } catch (err) {
+        oneStop.climate = null;
+      }
+      destinations.push(oneStop);
+      render(); // trickle in as each one resolves, don't wait for the whole hub
+    }
+
+    // Bigger gap between hubs than within a hub's own destination list —
+    // this is a separate origin-style call to AeroDataBox each time, so
+    // giving it extra breathing room reduces the chance of a 429.
+    if (i < HUB_CODES.length - 1) await sleep(2500);
+  }
+
+  setHubStatus(`1-stop check complete — ${HUB_CODES.length} hubs checked.`);
+  setHubProgress(0, null);
+
+  searchInProgress = false;
+  document.getElementById("searchBtn").disabled = false;
+}
+
+function updateDomesticToggleLabel(){
+  const code = originCountryCode(originCodeBtn.textContent);
+  const label = code ? countryName(code) : originCodeBtn.textContent;
+  document.querySelector("#domesticToggle span").textContent = `Include ${label} domestic routes`;
+}
+updateDomesticToggleLabel();
+
+function updateShortlistButton(){
+  const btn = document.getElementById("shortlistToggleBtn");
+  btn.style.display = destinations.length ? "inline-block" : "none";
+  btn.textContent = showShortlistOnly ? "See all" : `${shortlist.size} in shortlist`;
+}
+document.getElementById("shortlistToggleBtn").addEventListener("click", () => {
+  showShortlistOnly = !showShortlistOnly;
+  updateShortlistButton();
+  render();
+});
 
 function updateWindowLabel(){
   const start = document.getElementById("windowStart").value;
@@ -1090,6 +1450,10 @@ function updateWindowLabel(){
 }
 
 function runSearch(){
+  if (searchInProgress) {
+    setStatus("A search is already running — hang tight, this one will finish shortly.", true);
+    return;
+  }
   const windowStart = document.getElementById("windowStart").value;
   const windowEnd = document.getElementById("windowEnd").value;
   if (!windowStart || !windowEnd) {
@@ -1107,10 +1471,26 @@ function runSearch(){
 }
 
 function forceRefresh(){
+  if (searchInProgress) {
+    setStatus("A search is already running — hang tight, this one will finish shortly.", true);
+    return;
+  }
   const originCode = originCodeBtn.textContent;
   localStorage.removeItem(`ff_routes_${originCode}`);
   localStorage.removeItem(`ff_schedule_${originCode}`);
   loadEverything(originCode);
+}
+
+function clearAllCache(){
+  const keys = Object.keys(localStorage).filter(k => k.startsWith("ff_routes_") || k.startsWith("ff_schedule_") || k.startsWith("ff_climate_"));
+  keys.forEach(k => localStorage.removeItem(k));
+  setStatus(`Cache cleared (${keys.length} entr${keys.length === 1 ? "y" : "ies"} removed — flight and climate data). Hit Search to fetch fresh data.`);
+  destinations = [];
+  shortlist = new Set();
+  showShortlistOnly = false;
+  grid.innerHTML = `<div class="empty-state">Cache cleared — hit Search to fetch fresh data.</div>`;
+  resultCount.textContent = "— destinations";
+  setHubStatus("");
 }
 
 document.getElementById("mobileFiltersToggle").addEventListener("click", () => {
@@ -1145,25 +1525,32 @@ function humidityAllowed(destLevel, selected){
 function render(){
   const humiditySel = document.getElementById("humiditySelect").value;
   const qantasOnly = document.getElementById("qantasOnlyToggle").classList.contains("active");
+  const oneStopOk = document.getElementById("oneStopToggle").classList.contains("active");
+  const majorOnly = document.getElementById("majorOnlyToggle").classList.contains("active");
   const tempMin = +document.getElementById("tempMin").value;
   const tempMax = +document.getElementById("tempMax").value;
-  const maxDuration = +document.getElementById("durationMax").value * 60;
+  const durationSliderVal = +document.getElementById("durationMax").value;
+  const maxDuration = durationSliderVal >= 24 ? Infinity : durationSliderVal * 60;
 
   document.getElementById("tempMinLabel").textContent = tempMin + "°";
   document.getElementById("tempMaxLabel").textContent = tempMax + "°";
-  document.getElementById("durationLabel").textContent = "Up to " + document.getElementById("durationMax").value + " hrs";
+  document.getElementById("durationLabel").textContent = durationSliderVal >= 24 ? "24+ hrs (no limit)" : "Up to " + durationSliderVal + " hrs";
 
   grid.innerHTML = "";
   let visibleCount = 0;
 
   destinations.forEach((d, i) => {
-    const hasQantas = d.standbyOperatorCodes.has("QF");
+    const isOneStop = d.stopType === "1-stop";
+    const hasQantas = isOneStop ? false : d.standbyOperatorCodes.has("QF"); // Qantas-only doesn't currently apply to 1-stop legs
     const humidityLevel = d.climate ? d.climate.humidityLevel : "medium";
     const passesHumidity = humidityAllowed(humidityLevel, humiditySel);
     const passesAirline = !qantasOnly || hasQantas;
+    const passesStops = isOneStop ? oneStopOk : true;
     const passesDuration = !d.durationMinutes || d.durationMinutes <= maxDuration;
     const passesTemp = !d.climate || (d.climate.min >= tempMin && d.climate.max <= tempMax);
-    const visible = passesHumidity && passesAirline && passesDuration && passesTemp;
+    const passesSize = !majorOnly || d.airportSize === "large";
+    const passesShortlist = !showShortlistOnly || shortlist.has(d.code);
+    const visible = passesHumidity && passesAirline && passesStops && passesDuration && passesTemp && passesSize && passesShortlist;
     if (visible) visibleCount++;
 
     const climateLabel = d.climate ? `${d.climate.min}–${d.climate.max}°` : "No data";
@@ -1171,29 +1558,57 @@ function render(){
       ? `${humidityLevel[0].toUpperCase()+humidityLevel.slice(1)} (${d.climate.humidityPct}%)`
       : "Medium (est.)";
 
+    const isHubAirport = !isOneStop && HUB_CODES.includes(d.code);
+    const stopsBadge = isOneStop ? `1 stop · ${d.viaHubs.join(" · ")}` : "Nonstop";
+    const freqBadge = isOneStop
+      ? `Est. total (incl. layover)`
+      : (d.avgDailyFlights != null ? `~${d.avgDailyFlights.toFixed(1)} flights/day` : "No schedule data");
+    const routeLabel = isOneStop
+      ? `${originCodeBtn.textContent}<br>&gt;${d.bestHub}${d.viaHubs.length > 1 ? ` +${d.viaHubs.length - 1}` : ""}<br>&gt;${d.code}`
+      : `${originCodeBtn.textContent}<br>&gt;${d.code}`;
+
     const scene = document.createElement("div");
     scene.className = "card-scene" + (visible ? "" : " hidden");
     scene.innerHTML = `
       <div class="card">
         <div class="face front">
+          <div class="shortlist-tick ${shortlist.has(d.code) ? 'checked' : ''}" data-code="${d.code}"></div>
           <p class="dest-name">${d.city}</p>
           <p class="dest-country">${d.country}</p>
           <div class="stat-row"><span class="stat-label">Climate</span><span class="stat-value">${climateLabel}</span></div>
           <div class="stat-row"><span class="stat-label">Humidity</span><span class="stat-value">${humidityLabel}</span></div>
           <div class="stat-row"><span class="stat-label">Est. flight time</span><span class="stat-value">${d.durationLabel}</span></div>
           <div class="badge-row">
-            <span class="badge nonstop">Nonstop</span>
-            <span class="badge clear" data-tooltip="Based on this week's actual schedule, standby-eligible airlines only — not AeroDataBox's raw route average, which includes airlines you can't standby on">${d.avgDailyFlights != null ? `~${d.avgDailyFlights.toFixed(1)} flights/day` : "No schedule data"}</span>
+            <span class="badge ${isOneStop ? 'onestop' : 'nonstop'}">${stopsBadge}</span>
+            ${isHubAirport ? `<span class="badge hub-flag" data-tooltip="This is also one of your 5 connection hubs — flying here opens up onward standby options">Hub</span>` : ""}
+            <span class="badge clear" data-tooltip="Based on this week's actual schedule, standby-eligible airlines only — not AeroDataBox's raw route average, which includes airlines you can't standby on">${freqBadge}</span>
           </div>
         </div>
         <div class="face back">
           <div class="back-head">
             <div class="back-title">
               <h4>${d.city}</h4>
-              <span class="week-sub">this week</span>
+              <span class="week-sub">${isOneStop ? "carriers" : "this week"}</span>
             </div>
-            <div class="route-code">${originCodeBtn.textContent}<br>&gt;${d.code}</div>
+            <div class="route-code">${routeLabel}</div>
           </div>
+          ${isOneStop ? `
+          <div class="carrier-list">
+            ${d.viaHubs.length > 1 ? `
+            <div class="hub-tabs">
+              ${d.viaHubs.map(h => `<button type="button" class="hub-tab ${h === d.bestHub ? 'active' : ''}" data-card-idx="${i}" data-hub="${h}">${h}</button>`).join("")}
+            </div>
+            ` : ""}
+            ${d.viaHubs.map(h => `
+            <div class="carrier-chips" data-card-idx="${i}" data-hub="${h}" style="display:${h === d.bestHub ? 'flex' : 'none'};">
+              ${(d.hubOperators[h] || []).map(op => {
+                const brand = airlineBrand(op.iata);
+                return `<span class="carrier-chip" style="background:${brand.bg};color:${brand.text};">${op.iata} · ${op.name}</span>`;
+              }).join("")}
+            </div>
+            `).join("")}
+          </div>
+          ` : `
           <div class="week-row">
             ${d.week.map(w => {
               const uniqueAirlines = [...new Map(w.flights.map(f => [f.airlineCode, f])).values()];
@@ -1215,10 +1630,30 @@ function render(){
             }).join("")}
           </div>
           <button class="plan-btn" data-idx="${i}">Trip planner →</button>
+          `}
         </div>
       </div>
     `;
     scene.addEventListener("click", (e) => {
+      const tick = e.target.closest(".shortlist-tick");
+      if (tick) {
+        const code = tick.dataset.code;
+        if (shortlist.has(code)) shortlist.delete(code); else shortlist.add(code);
+        if (showShortlistOnly) { render(); } else { tick.classList.toggle("checked", shortlist.has(code)); updateShortlistButton(); }
+        return; // don't flip the card when ticking
+      }
+      const tabBtn = e.target.closest(".hub-tab");
+      if (tabBtn) {
+        const idx = tabBtn.dataset.cardIdx;
+        const hub = tabBtn.dataset.hub;
+        scene.querySelectorAll(`.hub-tab[data-card-idx="${idx}"]`).forEach(b => b.classList.toggle("active", b === tabBtn));
+        scene.querySelectorAll(`.carrier-chips[data-card-idx="${idx}"]`).forEach(el => {
+          el.style.display = el.dataset.hub === hub ? "flex" : "none";
+        });
+        const label = scene.querySelector(`.carrier-hub-label[data-card-idx="${idx}"]`);
+        if (label) label.textContent = hub;
+        return; // don't flip the card when switching tabs
+      }
       if (e.target.closest(".plan-btn")) return;
       scene.classList.toggle("flipped");
     });
@@ -1226,6 +1661,7 @@ function render(){
   });
 
   resultCount.textContent = `${visibleCount} destination${visibleCount === 1 ? "" : "s"}`;
+  updateShortlistButton();
 }
 
 grid.addEventListener("click", (e) => {
@@ -1247,6 +1683,20 @@ document.getElementById("qantasOnlyToggle").addEventListener("click", () => {
   document.getElementById("allAirlinesToggle").classList.remove("active");
   render();
 });
+document.getElementById("nonstopOnlyToggle").addEventListener("click", () => {
+  document.getElementById("nonstopOnlyToggle").classList.add("active");
+  document.getElementById("oneStopToggle").classList.remove("active");
+  render();
+});
+document.getElementById("majorOnlyToggle").addEventListener("click", () => {
+  document.getElementById("majorOnlyToggle").classList.toggle("active");
+  render();
+});
+document.getElementById("oneStopToggle").addEventListener("click", () => {
+  document.getElementById("oneStopToggle").classList.add("active");
+  document.getElementById("nonstopOnlyToggle").classList.remove("active");
+  render();
+});
 document.getElementById("domesticToggle").addEventListener("click", () => {
   document.getElementById("domesticToggle").classList.toggle("active");
   // Scope change needs a fresh route fetch to include/exclude domestic
@@ -1258,22 +1708,47 @@ document.getElementById("domesticToggle").addEventListener("click", () => {
   }
 });
 
+// One "Include X domestic routes" toggle per hub country (currently
+// US, Japan, UAE, Singapore, Hong Kong — derived from HUB_COUNTRY so
+// this stays in sync automatically if the hub list ever changes).
+(() => {
+  const container = document.getElementById("hubDomesticToggles");
+  container.innerHTML = HUB_COUNTRIES.map(code => `
+    <div class="toggle" id="domestic_${code}" data-country="${code}"><span>Include ${countryName(code)} domestic routes</span><span class="dot"></span></div>
+  `).join("");
+  container.querySelectorAll(".toggle").forEach(toggle => {
+    toggle.addEventListener("click", () => {
+      toggle.classList.toggle("active");
+      if (destinations.some(d => d.stopType === "1-stop")) {
+        setHubStatus("Hub scope changed — re-run the 1-stop check to apply it.");
+      }
+    });
+  });
+})();
+
 /* ============================================================
    TRIP PLANNER
+   Nonstop only. This destination list's schedule already comes from
+   the current origin's own already-fetched, already-cached FIDS data,
+   so opening this costs nothing extra. 1-stop cards deliberately don't
+   get a trip planner at all: showing one would mean fetching a hub's
+   schedule on demand, which is exactly the extra AeroDataBox cost this
+   app no longer spends. To get real schedule detail for a hub, set
+   "Flying from" to that hub and search it directly instead.
    ============================================================ */
 function openPlanner(d){
   document.getElementById("plannerCity").textContent = d.city;
   document.querySelector(".planner-sub").textContent = `${originCodeBtn.textContent} → ${d.code} · nonstop`;
-  renderPlannerForDate(d, document.getElementById("plannerDateInput").value);
   document.getElementById("overlay").classList.add("open");
   document.getElementById("plannerDateInput").onchange = (e) => renderPlannerForDate(d, e.target.value);
+  renderPlannerForDate(d, document.getElementById("plannerDateInput").value);
 }
 
 function renderPlannerForDate(d, isoDate){
   const jsDay = new Date(isoDate).getDay();
   const weekIdx = WEEKDAY_ORDER.indexOf(jsDay);
-  const dayData = d.week[weekIdx];
   const rows = document.getElementById("plannerRows");
+  const dayData = d.week[weekIdx];
 
   if (!dayData.flights.length) {
     const msg = d.hasScheduleData
