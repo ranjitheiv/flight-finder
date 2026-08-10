@@ -1468,6 +1468,10 @@ function runSearch(){
     setStatus("Set both travel window dates before searching.", true);
     return;
   }
+  if (new Date(windowEnd) <= new Date(windowStart)) {
+    setStatus("Your travel window end date needs to be after the start date — double-check those two fields.", true);
+    return;
+  }
   updateWindowLabel();
   const originCode = originCodeBtn.textContent;
   // Deliberately NOT clearing the cache here — Search should reuse route
