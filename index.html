@@ -575,9 +575,9 @@
       <label class="title">Airline access</label>
       <div class="toggle-row">
         <div class="toggle active" id="allAirlinesToggle"><span>All standby airlines</span><span class="dot"></span></div>
-        <div class="toggle" id="qantasOnlyToggle"><span>Qantas only</span><span class="dot"></span></div>
+        <div class="toggle" id="qantasOnlyToggle"><span>Qantas Group only</span><span class="dot"></span></div>
       </div>
-      <p class="helper">"All standby airlines" covers the 28 carriers on the QF codeshare/interline list. "Qantas only" shows routes with a QF flight number.</p>
+      <p class="helper">"All standby airlines" covers the 28 carriers on the QF codeshare/interline list, plus Jetstar (JQ) and Jetstar Japan (GK). "Qantas Group only" shows QF, JQ, or GK flights.</p>
     </div>
 
     <div class="filter-group">
@@ -662,11 +662,19 @@
 const RAPIDAPI_KEY = "09a5d91fcamsh7ce9a3fcd391a76p1b0e1ajsn4392fbf25229";
 const RAPIDAPI_HOST = "aerodatabox.p.rapidapi.com";
 
-// Every airline coded in the Qantas codeshare/interline PDF, plus QF itself.
+// Every airline coded in the Qantas codeshare/interline PDF, plus QF
+// itself, plus JQ (Jetstar) and GK (Jetstar Japan) — these are Qantas
+// Group's own subsidiaries rather than codeshare partners, so they were
+// never going to be on that PDF, but staff travel covers them the same
+// as mainline QF.
 const STANDBY_AIRLINES = new Set([
-  "QF","SB","AF","NZ","PX","TN","NF","TL","AS","AA","PG","BA","CX","CI",
+  "QF","JQ","GK","SB","AF","NZ","PX","TN","NF","TL","AS","AA","PG","BA","CX","CI",
   "MU","CZ","LY","EK","FJ","AY","GA","QX","6E","JL","KL","LA","IE","UL","WS"
 ]);
+
+// "Qantas only" means the whole Qantas Group, not just mainline QF —
+// Jetstar and Jetstar Japan flights count too.
+const QANTAS_GROUP = new Set(["QF", "JQ", "GK"]);
 
 const WEEKDAY_ORDER = [1,2,3,4,5,6,0]; // Mon..Sun, mapped to JS getDay() values
 const WEEKDAY_LABELS = ["Mo","Tu","We","Th","Fr","Sa","Su"];
@@ -1541,7 +1549,7 @@ function render(){
 
   destinations.forEach((d, i) => {
     const isOneStop = d.stopType === "1-stop";
-    const hasQantas = isOneStop ? false : d.standbyOperatorCodes.has("QF"); // Qantas-only doesn't currently apply to 1-stop legs
+    const hasQantas = isOneStop ? false : [...d.standbyOperatorCodes].some(code => QANTAS_GROUP.has(code)); // Qantas-only doesn't currently apply to 1-stop legs
     const humidityLevel = d.climate ? d.climate.humidityLevel : "medium";
     const passesHumidity = humidityAllowed(humidityLevel, humiditySel);
     const passesAirline = !qantasOnly || hasQantas;
